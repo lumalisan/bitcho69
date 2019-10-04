@@ -1,6 +1,9 @@
 package agents;
 
 //Bitcho69
+
+import java.util.Random;
+
 public class Bitxo1 extends Agent {
 
     static final boolean DEBUG = false;
@@ -17,6 +20,8 @@ public class Bitxo1 extends Agent {
     int espera = 0;
 
     long temps;
+    
+    Random rng;
 
     public Bitxo1(Agents pare) {
         super(pare, "Bitcho69", "imatges/moyake25.gif");
@@ -24,6 +29,7 @@ public class Bitxo1 extends Agent {
 
     @Override
     public void inicia() {
+        rng = new Random();
         posaAngleVisors(45);
         posaDistanciaVisors(250);
         posaVelocitatLineal(3);
@@ -71,11 +77,9 @@ public class Bitxo1 extends Agent {
 
     @Override
     public void avaluaComportament() {
-//        boolean enemic;
-//
-//        enemic = false;
-
+        boolean enemic = false;
 //        int dir;
+
         temps++;
         estat = estatCombat();
         if (espera > 0) {
@@ -96,7 +100,8 @@ public class Bitxo1 extends Agent {
                 if (estat.objecteVisor[CENTRAL] == NAU) {
                     dispara();
                 } else { // hi ha un obstacle, gira i parteix
-                    gira(20); // 20 graus
+                    int giro = rng.nextInt(360) + 1;
+                    gira(giro);
                     if (hiHaParedDavant(20)) {
                         enrere();
                     } else {
@@ -108,7 +113,7 @@ public class Bitxo1 extends Agent {
                 endavant();
 
                 if (estat.objecteVisor[CENTRAL] == NAU && estat.bales != 0) {
-//                    enemic = true;
+                    enemic = true;
                     if (estat.bales == 0) {
                         getTheFuckAwayOfMyMangoDisecadoMan();
                     } else {
@@ -118,7 +123,7 @@ public class Bitxo1 extends Agent {
                     mira(estat.enemic[0]);
                     modoDiablo();
                 } else {
-//                    enemic = false;
+                    enemic = false;
                     modoPusi();
                 }
 
@@ -170,35 +175,17 @@ public class Bitxo1 extends Agent {
     }
 
     boolean hiHaParedDavant(int dist) {
-
-        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= dist) {
-            return true;
-        }
-
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= dist) {
-            return true;
-        }
-
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= dist) {
-            return true;
-        }
-
+        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= dist) return true;
+        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= dist) return true;
+        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= dist) return true;
         return false;
     }
 
     double minimaDistanciaVisors() {
-        double minim;
-
-        minim = Double.POSITIVE_INFINITY;
-        if (estat.objecteVisor[ESQUERRA] == PARET) {
-            minim = estat.distanciaVisors[ESQUERRA];
-        }
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < minim) {
-            minim = estat.distanciaVisors[CENTRAL];
-        }
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < minim) {
-            minim = estat.distanciaVisors[DRETA];
-        }
+        double minim = Double.POSITIVE_INFINITY;
+        if (estat.objecteVisor[ESQUERRA] == PARET) minim = estat.distanciaVisors[ESQUERRA];
+        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < minim) minim = estat.distanciaVisors[CENTRAL];
+        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < minim) minim = estat.distanciaVisors[DRETA];
         return minim;
     }
 }
