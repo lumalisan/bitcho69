@@ -42,7 +42,7 @@ public class Bitxo1 extends Agent {
         posaAngleVisors(30);
         posaDistanciaVisors(300);
         posaVelocitatLineal(6);
-        //if (!estat.disparant ) {
+        //if (!estat.disparant) {
             if (estat.objecteVisor[CENTRAL]== NAU && estat.distanciaVisor<40) {
                 dispara();
             //}
@@ -89,10 +89,7 @@ public class Bitxo1 extends Agent {
             
             if (estat.numEnemics > 0) {
                 mira(estat.enemic[0]);
-                
-                
-               
-                
+ 
             }
 
             if (estat.enCollisio) { // situació de nau bloquejada
