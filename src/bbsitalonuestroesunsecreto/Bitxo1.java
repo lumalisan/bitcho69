@@ -20,7 +20,6 @@ public class Bitxo1 extends Agent {
     int espera = 0;
 
     long temps;
-    
     Random rng;
 
     public Bitxo1(Agents pare) {
@@ -30,55 +29,26 @@ public class Bitxo1 extends Agent {
     @Override
     public void inicia() {
         rng = new Random();
-        posaAngleVisors(45);
-        posaDistanciaVisors(250);
-        posaVelocitatLineal(3);
-        posaVelocitatAngular(9);
+        modoRecolector();
         espera = 0;
         temps = 0;
     }
 
-    void modoDiablo() {  //Estado terminator cuando ve enemigo
-        posaAngleVisors(30);
-        posaDistanciaVisors(300);
-        posaVelocitatLineal(6);
-        //if (!estat.disparant) {
-            if (estat.objecteVisor[CENTRAL]== NAU && estat.distanciaVisor<40) {
-                dispara();
-            //}
-            
-        }
-    }
-
-    void modoPusi() { //Estado pasivo inicial
-        posaAngleVisors(45);
+    void modoRecolector() { //Estado recolector de recursos y evitar minas
+        posaAngleVisors(75);
         posaDistanciaVisors(250);
-        posaVelocitatLineal(3);
-    }
-
-    void getTheFuckAwayOfMyMangoDisecadoMan() { //Huye en el caso que no queden balas
-        gira(180);
         posaVelocitatLineal(6);
-        espera = 3;
+        posaVelocitatAngular(9);
     }
 
-    void rawNoodles() { //Esquivar minas
-        gira(360);
-        gira(360);
-        gira(360);
-        gira(360);
-    }
-
-    void veganFood() { //Coger potenciadores verdes
-        if (estat.fuel > 5000) {
-            posaVelocitatLineal(6);
-        }
+    void modoHuida() { //Huye en el caso que vea enemigos
+        posaAngleVisors(45);
+        posaDistanciaVisors(150);
     }
 
     @Override
     public void avaluaComportament() {
         boolean enemic = false;
-//        int dir;
 
         temps++;
         estat = estatCombat();
@@ -86,16 +56,18 @@ public class Bitxo1 extends Agent {
             espera--;
         } else {
             atura();
-            
+
             if (estat.numEnemics > 0) {
-                mira(estat.enemic[0]);
- 
+                modoHuida();
+            } else if (estat.numRecursos > 0) {
+                mira(estat.recurs[0]);
             }
 
             if (estat.enCollisio) { // situació de nau bloquejada
                 // si veu la nau, dispara
                 if (estat.objecteVisor[CENTRAL] == NAU) {
                     dispara();
+                    enrere();
                 } else { // hi ha un obstacle, gira i parteix
                     int giro = rng.nextInt(360) + 1;
                     gira(giro);
@@ -109,33 +81,26 @@ public class Bitxo1 extends Agent {
             } else {
                 endavant();
 
-                if (estat.objecteVisor[CENTRAL] == NAU && estat.bales != 0) {
+                if (estat.objecteVisor[CENTRAL] == NAU) {
                     enemic = true;
                     if (estat.bales == 0) {
-                        getTheFuckAwayOfMyMangoDisecadoMan();
+                        modoHuida();
                     } else {
-                        modoDiablo();
+                        modoRecolector();
                     }
                 } else if (estat.objecteVisor[ESQUERRA] == NAU || estat.objecteVisor[DRETA] == NAU) {
                     mira(estat.enemic[0]);
-                    modoDiablo();
+                    modoRecolector();
                 } else {
                     enemic = false;
-                    modoPusi();
+                    modoRecolector();
                 }
 
                 // Miram els visors per detectar els obstacles
                 int sensor = 0;
-
-                if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] < 45) {
-                    sensor += 1;
-                }
-                if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < 45) {
-                    sensor += 2;
-                }
-                if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < 45) {
-                    sensor += 4;
-                }
+                if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] < 45) sensor += 1;
+                if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < 45) sensor += 2;
+                if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < 45) sensor += 4;
 
                 switch (sensor) {
                     case 0: //000
@@ -156,7 +121,6 @@ public class Bitxo1 extends Agent {
                     case 7:  // si estic molt aprop, torna enrere (111)
                         double distancia;
                         distancia = minimaDistanciaVisors();
-
                         if (distancia < 15) {
                             espera = 8;
                             enrere();
