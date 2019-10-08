@@ -2,6 +2,11 @@ package agents;
 
 //Bitcho69
 
+// APUNTES
+// - Cuando se recibe daño y no hay enemigos en los sensores --> Hiperespacio babyyy
+// - Ver si se pueden saber cuántos recursos hay en el campo, si no quedan --> modo huir bich
+// - sosig
+
 import java.util.Random;
 
 public class Bitxo1 extends Agent {
@@ -44,6 +49,48 @@ public class Bitxo1 extends Agent {
     void modoHuida() { //Huye en el caso que vea enemigos
         posaAngleVisors(45);
         posaDistanciaVisors(150);
+    }
+
+    void movimiento() {
+        // Miram els visors per detectar els obstacles
+        int sensor = 0;
+        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] < 45) {
+            sensor += 1;
+        }
+        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < 45) {
+            sensor += 2;
+        }
+        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < 45) {
+            sensor += 4;
+        }
+
+        switch (sensor) {
+            case 0: //000
+                endavant();
+                break;
+            case 1: //001
+            case 2:  // paret devant (010)
+            case 3:  // esquerra bloquejada (011)
+                dreta();
+                break;
+            case 4: //100
+            case 5: //101
+                endavant();
+                break;  // centre lliure
+            case 6:  // dreta bloquejada (110)
+                esquerra();
+                break;
+            case 7:  // si estic molt aprop, torna enrere (111)
+                double distancia;
+                distancia = minimaDistanciaVisors();
+                if (distancia < 15) {
+                    espera = 8;
+                    enrere();
+                } else {
+                    esquerra();
+                }
+                break;
+        }
     }
 
     @Override
@@ -96,39 +143,7 @@ public class Bitxo1 extends Agent {
                     modoRecolector();
                 }
 
-                // Miram els visors per detectar els obstacles
-                int sensor = 0;
-                if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] < 45) sensor += 1;
-                if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < 45) sensor += 2;
-                if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < 45) sensor += 4;
-
-                switch (sensor) {
-                    case 0: //000
-                        endavant();
-                        break;
-                    case 1: //001
-                    case 2:  // paret devant (010)
-                    case 3:  // esquerra bloquejada (011)
-                        dreta();
-                        break;
-                    case 4: //100
-                    case 5: //101
-                        endavant();
-                        break;  // centre lliure
-                    case 6:  // dreta bloquejada (110)
-                        esquerra();
-                        break;
-                    case 7:  // si estic molt aprop, torna enrere (111)
-                        double distancia;
-                        distancia = minimaDistanciaVisors();
-                        if (distancia < 15) {
-                            espera = 8;
-                            enrere();
-                        } else {
-                            esquerra();
-                        }
-                        break;
-                }
+                movimiento();
 
             }
 
@@ -136,17 +151,29 @@ public class Bitxo1 extends Agent {
     }
 
     boolean hiHaParedDavant(int dist) {
-        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= dist) return true;
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= dist) return true;
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= dist) return true;
+        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= dist) {
+            return true;
+        }
+        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= dist) {
+            return true;
+        }
+        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= dist) {
+            return true;
+        }
         return false;
     }
 
     double minimaDistanciaVisors() {
         double minim = Double.POSITIVE_INFINITY;
-        if (estat.objecteVisor[ESQUERRA] == PARET) minim = estat.distanciaVisors[ESQUERRA];
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < minim) minim = estat.distanciaVisors[CENTRAL];
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < minim) minim = estat.distanciaVisors[DRETA];
+        if (estat.objecteVisor[ESQUERRA] == PARET) {
+            minim = estat.distanciaVisors[ESQUERRA];
+        }
+        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < minim) {
+            minim = estat.distanciaVisors[CENTRAL];
+        }
+        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < minim) {
+            minim = estat.distanciaVisors[DRETA];
+        }
         return minim;
     }
 }
