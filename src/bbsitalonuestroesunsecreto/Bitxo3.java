@@ -1,24 +1,22 @@
 package agents;
 
 // Exemple de Bitxo
-
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import javax.swing.Timer;
 
-public class Bitxo3 extends Agent
-{
+public class Bitxo3 extends Agent {
+
     static final boolean DEBUG = false;
 
     static final int PARET = 0;
-    static final int NAU   = 1;
-    static final int RES   = -1;
+    static final int NAU = 1;
+    static final int RES = -1;
 
     static final int ESQUERRA = 0;
-    static final int CENTRAL  = 1;
-    static final int DRETA    = 2;
+    static final int CENTRAL = 1;
+    static final int DRETA = 2;
 
     static final int STD = 5;       // Std. velocitat
     static final int STDD = 150;    // Std. distancia visors
@@ -45,14 +43,14 @@ public class Bitxo3 extends Agent
 
     // Cerca recursos
     Point direccio = new Point(0, 0),
-         pdireccio = new Point(0, 0),
-          pposicio = new Point(0, 0);
+            pdireccio = new Point(0, 0),
+            pposicio = new Point(0, 0);
     int objectiu = 0;
 
     // Comptadors
     int contra7 = 0;
     int colisionat = 6;
-    
+
     long temps;
     Timer t;
 
@@ -64,21 +62,24 @@ public class Bitxo3 extends Agent
                 if (direccio.x == pdireccio.x && direccio.y == pdireccio.y) {
                     double dist = pposicio.distance(estat.posicio.x, estat.posicio.y);
                     if (dist < 50) {
-                        objectiu = (objectiu + 1)%estat.nbonificacions;
+                        objectiu = (objectiu + 1) % estat.nbonificacions;
                         cercaMenjar();
                     }
                 }
-                if (!bloquejat) cercaMenjar();
-                pdireccio.x = direccio.x; pdireccio.y = direccio.y;
-                pposicio.x = estat.posicio.x; pposicio.y = estat.posicio.y;
+                if (!bloquejat) {
+                    cercaMenjar();
+                }
+                pdireccio.x = direccio.x;
+                pdireccio.y = direccio.y;
+                pposicio.x = estat.posicio.x;
+                pposicio.y = estat.posicio.y;
             }
         });
         t.setInitialDelay(0);
     }
 
     @Override
-    public void inicia()
-    {
+    public void inicia() {
         // Inicialitzacions estàndar
         posaAngleVisors(30);
         posaDistanciaVisors(STDD);
@@ -99,8 +100,7 @@ public class Bitxo3 extends Agent
     }
 
     @Override
-    public void avaluaComportament()
-    {
+    public void avaluaComportament() {
         boolean enemic;
         enemic = false;
 
@@ -119,12 +119,10 @@ public class Bitxo3 extends Agent
         if (!enCombat && hePerdutVida()) {
             hyperespai();
         }
-        
+
         if (espera > 0) {
             espera--;
-        }
-        else
-        {
+        } else {
             if (!enCombat) {
                 atura();
             }
@@ -146,38 +144,40 @@ public class Bitxo3 extends Agent
                     // si veu la nau, dispara
                     if (estat.objecteVisor[CENTRAL] == NAU && estat.impactesRival[0] < 5) {
                         dispara();   //bloqueig per nau, no giris dispara
-                    }
-                    else // hi ha un obstacle, gira i parteix
+                    } else // hi ha un obstacle, gira i parteix
                     {
                         // Control de colisions contínues
                         colisionat--;
                         if (colisionat == 3) {
                             // Mira en l'eix vertical cap on estigui el recurs assignat
                             int aux = 0;
-                            aux = (direccio.y <= estat.posicio.y)?(-50):(50);
+                            aux = (direccio.y <= estat.posicio.y) ? (-50) : (50);
                             mira(estat.recurs[0]);
                             endavant();
                         } else if (colisionat == 0) {
                             // Mira en l'eix horitzontal cap on estigui el recurs assignat
                             int aux = 0;
-                            aux = (direccio.x <= estat.posicio.x)?(-50):(50);
+                            aux = (direccio.x <= estat.posicio.x) ? (-50) : (50);
                             mira(estat.recurs[0]);
                             endavant();
                         } else {
                             // Sortida de colisions
-                            if (hiHaParedDavant(20)) enrere();
-                            else {
+                            if (hiHaParedDavant(20)) {
+                                enrere();
+                            } else {
                                 posaVelocitatAngular(MAXA);
-                                if (estat.distanciaVisors[DRETA] < estat.distanciaVisors[ESQUERRA])
+                                if (estat.distanciaVisors[DRETA] < estat.distanciaVisors[ESQUERRA]) {
                                     esquerra();
-                                else dreta();
+                                } else {
+                                    dreta();
+                                }
                             }
                         }
 
-                        espera=3;
+                        espera = 3;
                     }
                 }
-                
+
             } else {
                 if (situacio5 > 0 && !enCombat) {
                     situacio5();
@@ -215,7 +215,6 @@ public class Bitxo3 extends Agent
                         }
                     }
 
-
                     if (estat.objecteVisor[CENTRAL] == NAU) {
                         enemic = true;
                         enCombat = true;
@@ -234,9 +233,9 @@ public class Bitxo3 extends Agent
                     // Si no veim l'enemic anam a cercar menjar
                     if (!estat.veigEnemic[0] && !bloquejat && !estat.enCollisio) {
                         if (heTrobatRecurs()) {
-                                escut = true;
-                                objectiu = 0;
-                                cercaMenjar();
+                            escut = true;
+                            objectiu = 0;
+                            cercaMenjar();
                         }
 
                         // L'enemic ha consumit un recurs que potser era al qual anava
@@ -245,8 +244,9 @@ public class Bitxo3 extends Agent
                             cercaMenjar();
                         }
 
-                        if (esperaMenjar > 0) esperaMenjar--;
-                        else {
+                        if (esperaMenjar > 0) {
+                            esperaMenjar--;
+                        } else {
                             mira(estat.enemic[0]);
                             esperaMenjar = 4;
                         }
@@ -298,31 +298,28 @@ public class Bitxo3 extends Agent
                                 distancia = minimaDistanciaVisors();
 
                                 if (visorsLateralsMesCurts()) {
-                                    objectiu = (objectiu + 1)%estat.nbonificacions;
+                                    objectiu = (objectiu + 1) % estat.nbonificacions;
                                     cercaMenjar();
-                                }
-                                else
-                                if (visorsLateralsLliures()) {
+                                } else if (visorsLateralsLliures()) {
                                     esquerra();
-                                }
-                                else {
+                                } else {
                                     int aux = 0;
-                                    if (estat.angle <= 45 && estat.angle >= 315 ||
-                                        estat.angle >= 135 && estat.angle <= 225) {
-                                            if (Math.random() * 500 < 250) {
-                                                aux = 100;
-                                            } else {
-                                                aux = -100;
-                                            }
-                                            direccio.x += aux;
-                                    } else if (estat.angle >= 45 && estat.angle <= 135 ||
-                                               estat.angle >= 225 && estat.angle <= 315) {
-                                            if (Math.random() * 500 < 250) {
-                                                aux = 100;
-                                            } else {
-                                                aux = -100;
-                                            }
-                                            direccio.y += aux;
+                                    if (estat.angle <= 45 && estat.angle >= 315
+                                            || estat.angle >= 135 && estat.angle <= 225) {
+                                        if (Math.random() * 500 < 250) {
+                                            aux = 100;
+                                        } else {
+                                            aux = -100;
+                                        }
+                                        direccio.x += aux;
+                                    } else if (estat.angle >= 45 && estat.angle <= 135
+                                            || estat.angle >= 225 && estat.angle <= 315) {
+                                        if (Math.random() * 500 < 250) {
+                                            aux = 100;
+                                        } else {
+                                            aux = -100;
+                                        }
+                                        direccio.y += aux;
                                     }
                                 }
 
@@ -330,13 +327,13 @@ public class Bitxo3 extends Agent
                                     espera = 8;
                                     enrere();
                                 } else // gira aleatòriament a la dreta o a l'esquerra
-                                    if (distancia < 50) {
-                                        if (Math.random() * 500 < 250) {
-                                            dreta();
-                                        } else {
-                                            esquerra();
-                                        }
+                                if (distancia < 50) {
+                                    if (Math.random() * 500 < 250) {
+                                        dreta();
+                                    } else {
+                                        esquerra();
                                     }
+                                }
                                 if (estat.nbonificacions == 1) {
                                     esperaMenjar = 20;
                                 }
@@ -352,32 +349,37 @@ public class Bitxo3 extends Agent
         impactesAnteriors = estat.impactesRebuts;
 
     }
-    
 
     boolean hiHaParedDavant(int dist) {
 
-       if (estat.objecteVisor[ESQUERRA]== PARET && estat.distanciaVisors[ESQUERRA]<=dist)
-           return true;
+        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= dist) {
+            return true;
+        }
 
-       if (estat.objecteVisor[CENTRAL ]== PARET && estat.distanciaVisors[CENTRAL ]<=dist)
-           return true;
+        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= dist) {
+            return true;
+        }
 
-       if (estat.objecteVisor[DRETA   ]== PARET && estat.distanciaVisors[DRETA   ]<=dist)
-           return true;
-       
-       return false;
+        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= dist) {
+            return true;
+        }
+
+        return false;
     }
 
     double minimaDistanciaVisors() {
         double minim;
 
         minim = Double.POSITIVE_INFINITY;
-        if (estat.objecteVisor[ESQUERRA] == PARET)
+        if (estat.objecteVisor[ESQUERRA] == PARET) {
             minim = estat.distanciaVisors[ESQUERRA];
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL]<minim)
+        }
+        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < minim) {
             minim = estat.distanciaVisors[CENTRAL];
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA]<minim)
+        }
+        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < minim) {
             minim = estat.distanciaVisors[DRETA];
+        }
         return minim;
     }
 
@@ -405,10 +407,10 @@ public class Bitxo3 extends Agent
     }
 
     boolean heTrobatRecurs() {
-        return (estat.posicio.x >= direccio.x - 10 &&
-                estat.posicio.x <= direccio.x + 10 &&
-                estat.posicio.y >= direccio.y - 10 &&
-                estat.posicio.y <= direccio.y + 10);
+        return (estat.posicio.x >= direccio.x - 10
+                && estat.posicio.x <= direccio.x + 10
+                && estat.posicio.y >= direccio.y - 10
+                && estat.posicio.y <= direccio.y + 10);
     }
 
     int usaSensors(int dist) {
@@ -428,11 +430,12 @@ public class Bitxo3 extends Agent
     }
 
     boolean visorsLateralsMesCurts() {
-        return (estat.distanciaVisors[DRETA] < estat.distanciaVisors[CENTRAL] &&
-                estat.distanciaVisors[ESQUERRA] < estat.distanciaVisors[CENTRAL]);
+        return (estat.distanciaVisors[DRETA] < estat.distanciaVisors[CENTRAL]
+                && estat.distanciaVisors[ESQUERRA] < estat.distanciaVisors[CENTRAL]);
     }
 
     boolean dreta = false;
+
     void situacio5() {
         if (situacio5 == 2) {
             if (estat.distanciaVisors[DRETA] < estat.distanciaVisors[ESQUERRA]) {
@@ -461,7 +464,7 @@ public class Bitxo3 extends Agent
     }
 
     boolean visorsLateralsLliures() {
-        return (estat.distanciaVisors[DRETA] > 90 &&
-                estat.distanciaVisors[ESQUERRA] > 90);
+        return (estat.distanciaVisors[DRETA] > 90
+                && estat.distanciaVisors[ESQUERRA] > 90);
     }
 }
