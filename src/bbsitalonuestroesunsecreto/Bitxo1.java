@@ -45,8 +45,13 @@ public class Bitxo1 extends Agent {
     }
 
     void modoHuida() { //Huye en el caso que vea enemigos
-        posaAngleVisors(40);
-        posaDistanciaVisors(250);
+        if (estat.numEnemics > 0) {
+            if (estat.enemic[0].agafaSector() == 3) {
+                dreta();
+            } else if (estat.enemic[0].agafaSector() == 2) {
+                esquerra();
+            }
+        }
     }
 
 //    void esquivar() {
@@ -117,18 +122,20 @@ public class Bitxo1 extends Agent {
         } else {
             atura();
 
-            if (estat.numEnemics > 0) {
-                modoHuida();
-            }
-
             if (estat.numRecursos > 0) {
                 if (estat.numRecursos == 1) {
-                    mira(estat.recurs[0]);
+                    if (!estat.enCollisio) {
+                        mira(estat.recurs[0]);
+                    }
                 } else {
                     if (estat.recurs[0].agafaDistancia() > estat.recurs[1].agafaDistancia()) {
-                        mira(estat.recurs[0]);
+                        if (!estat.enCollisio) {
+                            mira(estat.recurs[0]);
+                        }
                     } else {
-                        mira(estat.recurs[1]);
+                        if (!estat.enCollisio) {
+                            mira(estat.recurs[1]);
+                        }
                     }
                 }
             }
@@ -232,8 +239,15 @@ public class Bitxo1 extends Agent {
                     dispara();
                     enrere();
                 } else { // hi ha un obstacle, gira i parteix
-                    esquivar();
-                    //gira(180);
+                    //esquivar();
+                    if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisor <= 20) {
+                        gira(180);
+                    } else if(estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisor <= 20) {
+                        dreta();
+                    } else if(estat.objecteVisor[DRETA] == PARET && estat.distanciaVisor <= 20) {
+                        esquerra();
+                    }
+                    gira(20);
                     if (DEBUG) {
                         System.out.println("esquivar en colision");
                     }
@@ -249,17 +263,25 @@ public class Bitxo1 extends Agent {
 
                 if (estat.objecteVisor[CENTRAL] == NAU) {
                     enemic = true;
-                    if (estat.bales == 0) {
-                        modoHuida();
-                    } else {
-                        modoRecolector();
+                    //modoHuida();
+                    dreta();
+                    espera = 2;
+                } else if (estat.objecteVisor[ESQUERRA] == NAU) {
+                    if (!estat.enCollisio) {
+                        dreta();
+                        espera = 2;
                     }
-                } else if (estat.objecteVisor[ESQUERRA] == NAU || estat.objecteVisor[DRETA] == NAU) {
-                    mira(estat.enemic[0]);
                     if (DEBUG) {
-                        System.out.println("i'm seeing a nigga in front of me");
+                        System.out.println("i'm seeing a nigga in my ESQUERRA");
                     }
-                    modoRecolector();
+                } else if (estat.objecteVisor[DRETA] == NAU) {
+                    if (!estat.enCollisio) {
+                        esquerra();
+                        espera = 2;
+                    }
+                    if (DEBUG) {
+                        System.out.println("i'm seeing a nigga in my DRETA");
+                    }
                 } else {
                     enemic = false;
                     modoRecolector();
