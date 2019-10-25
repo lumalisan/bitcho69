@@ -240,14 +240,13 @@ public class Bitxo1 extends Agent {
                     enrere();
                 } else { // hi ha un obstacle, gira i parteix
                     //esquivar();
-                    if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisor <= 20) {
+                    if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= 20) {
                         gira(180);
-                    } else if(estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisor <= 20) {
+                    } else if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= 20) {
                         dreta();
-                    } else if(estat.objecteVisor[DRETA] == PARET && estat.distanciaVisor <= 20) {
+                    } else if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= 20) {
                         esquerra();
                     }
-                    gira(20);
                     if (DEBUG) {
                         System.out.println("esquivar en colision");
                     }
@@ -256,6 +255,7 @@ public class Bitxo1 extends Agent {
                     } else {
                         endavant();
                     }
+
                     espera = 3;
                 }
             } else {
