@@ -55,7 +55,7 @@ public class Bitxo3 extends Agent {
     Timer t;
 
     public Bitxo3(Agents pare) {
-        super(pare, "PPEP", "imatges/moyake25.gif");
+        super(pare, "Esbitchança", "imatges/moyake25.gif");
         t = new Timer(3500, new ActionListener() {
 
             public void actionPerformed(ActionEvent ae) {

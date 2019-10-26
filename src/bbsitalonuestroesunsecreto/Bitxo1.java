@@ -26,7 +26,7 @@ public class Bitxo1 extends Agent {
     Random rng;
 
     public Bitxo1(Agents pare) {
-        super(pare, "Bitcho69", "imatges/moyake25.gif");
+        super(pare, "Bitcho69", "imatges/moyake25ANGRY.gif");
     }
 
     @Override
@@ -46,18 +46,16 @@ public class Bitxo1 extends Agent {
 
     void modoHuida() { //Huye en el caso que vea enemigos
         if (estat.numEnemics > 0) {
-            if (estat.enemic[0].agafaSector() == 3) {
+            if (estat.enemic[0].agafaSector() == 3 && estat.enemic[0].agafaDistancia() <= 200) {
                 dreta();
-            } else if (estat.enemic[0].agafaSector() == 2) {
+                System.out.println("ou shit me escapo del enemico izquierdo");
+            } else if (estat.enemic[0].agafaSector() == 2 && estat.enemic[0].agafaDistancia() <= 200) {
                 esquerra();
+                System.out.println("ou shit me escapo del enemico derecho");
             }
         }
     }
 
-//    void esquivar() {
-//        int giro = rng.nextInt(360) + 1;
-//        gira(giro);
-//    }
     //Segundo intento de hacer esquivar al puto bicho.
     //Puede girar a la izq o a la der (poner que gire 180?)
     void esquivar() {
@@ -102,7 +100,7 @@ public class Bitxo1 extends Agent {
                 double distancia;
                 distancia = minimaDistanciaVisors();
                 if (distancia < 15) {
-                    espera = 8;
+                    espera = 5;
                     enrere();
                 } else {
                     esquerra();
@@ -122,176 +120,145 @@ public class Bitxo1 extends Agent {
         } else {
             atura();
 
-            if (estat.numRecursos > 0) {
-                if (estat.numRecursos == 1) {
-                    if (!estat.enCollisio) {
-                        mira(estat.recurs[0]);
+            //Nuevo sistema de esquivar minas, funciona un pelin mejor (queda mejorar el sistema de recursos)
+            if (estat.numMines > 0) {
+                
+                
+                
+                
+                if (estat.numMines == 1) {
+                    System.out.println("Solo veo una MINA");
+                    if (estat.mina[0].agafaSector() == 3 && estat.mina[0].agafaDistancia() <= 40) {
+                        dreta();
+//                        espera = 3;
+                        System.out.println("Veo mina izq");
+                    } else if (estat.mina[0].agafaSector() == 2 && estat.mina[0].agafaDistancia() <= 40) {
+                        esquerra();
+//                        espera = 3;
+                        System.out.println("Veo mina der");
                     }
                 } else {
-                    if (estat.recurs[0].agafaDistancia() > estat.recurs[1].agafaDistancia()) {
+//                    System.out.printf("Veo %d minas, distancia 1: %d, distancia 2: %d\n", estat.numMines, estat.mina[0].agafaDistancia(), estat.mina[1].agafaDistancia());
+//                    int num_mina = 0;
+                    for (int i = 0; i < estat.numMines - 1; i++) { //Buscamos la mina mas cercana
+                        if (estat.mina[i].agafaDistancia() <= estat.mina[i + 1].agafaDistancia()) {
+                            if (estat.mina[i].agafaSector() == 3 && estat.mina[i].agafaDistancia() <= 40) {
+                                dreta();
+//                        espera = 3;
+                                System.out.println("Veo mina 1 izq");
+                            } else if (estat.mina[i].agafaSector() == 2 && estat.mina[i].agafaDistancia() <= 40) {
+                                esquerra();
+//                        espera = 3;
+                                System.out.println("Veo mina 1 der");
+                            }
+                        } else if (i == estat.numMines - 1) {
+                            if (estat.mina[i + 1].agafaSector() == 3 && estat.mina[i + 1].agafaDistancia() <= 40) {
+                                dreta();
+//                        espera = 3;
+                                System.out.println("Veo mina 1 izq");
+                            } else if (estat.mina[i + 1].agafaSector() == 2 && estat.mina[i + 1].agafaDistancia() <= 40) {
+                                esquerra();
+//                        espera = 3;
+                                System.out.println("Veo mina 1 der");
+                            }
+                        }
+                    }
+
+                }
+            } //Si no vemos minas, buscamos recusrsos
+                if (DEBUG) {
+//                    System.out.println("Estoy buscando recursos bich");
+                }
+
+                if (estat.numRecursos > 0) {
+                    if (estat.numRecursos == 1) {
                         if (!estat.enCollisio) {
                             mira(estat.recurs[0]);
                         }
                     } else {
-                        if (!estat.enCollisio) {
-                            mira(estat.recurs[1]);
+                        for (int i = 0; i < estat.numRecursos - 1; i++) {
+                            if (estat.recurs[i].agafaDistancia() <= estat.recurs[i + 1].agafaDistancia()) {
+                                if (!estat.enCollisio) {
+                                    mira(estat.recurs[i]);
+                                }
+                            } else if (i == estat.numRecursos - 1) {
+                                if (!estat.enCollisio) {
+                                    mira(estat.recurs[i + 1]);
+                                }
+                            }
+
                         }
                     }
                 }
-            }
+            
 
-            //Nuevo sistema de esquivar minas, funciona un pelin mejor (queda mejorar el sistema de recursos)
-            if (estat.numMines > 0) {
-                if (estat.numMines == 1) {
-                    if (estat.mina[0].agafaSector() == 3) {
-                        if (estat.mina[0].agafaDistancia() <= 40) {
-                            dreta();
-                            espera = 3;
-                        }
-                    } else if (estat.mina[0].agafaSector() == 2) {
-                        if (estat.mina[0].agafaDistancia() <= 40) {
-                            esquerra();
-                            espera = 3;
-                        }
-                    }
-                } else {
-                    if (estat.mina[0].agafaDistancia() <= estat.mina[1].agafaDistancia()) {
-                        if (estat.mina[0].agafaSector() == 3) {
-                            if (estat.mina[0].agafaDistancia() <= 40) {
-                                dreta();
-                                espera = 3;
-                            }
-                        } else if (estat.mina[0].agafaSector() == 2) {
-                            if (estat.mina[0].agafaDistancia() <= 40) {
-                                esquerra();
-                                espera = 3;
-                            }
-                        }
-                    } else {
-                        if (estat.mina[1].agafaSector() == 3) {
-                            if (estat.mina[1].agafaDistancia() <= 40) {
-                                dreta();
-                                espera = 3;
-                            }
-                        } else if (estat.mina[1].agafaSector() == 2) {
-                            if (estat.mina[1].agafaDistancia() <= 40) {
-                                esquerra();
-                                espera = 3;
-                            }
+                if (estat.hyperespaiDisponibles > 0) {
+                    if (estat.impactesRebuts > 0) {
+                        hyperespai();
+                        if (DEBUG) {
+                            System.out.println("HYPERESPAI");
                         }
                     }
                 }
-            }
 
-//            if (estat.numMines > 0) {
-//                if (estat.numMines == 1) {
-//                    mira(estat.mina[0]);
-//                    if (DEBUG) {
-//                        System.out.println("estoy mirando la mina 0");
-//                    }
-//                    if (estat.mina[0].agafaDistancia() <= 40) {
-//                        esquivar();
-//                        if (DEBUG) {
-//                            System.out.println("esquivar en caso 1");
-//                        }
-//                        espera = 3;
-//                    }
-//                } else {
-//                    if (estat.mina[0].agafaDistancia() < estat.mina[1].agafaDistancia()) {
-//                        mira(estat.mina[0]);
-//                        if (DEBUG) {
-//                            System.out.println("estoy mirando la mina 0 bich");
-//                        }
-//                        if (estat.mina[0].agafaDistancia() <= 40) {
-//                            esquivar();
-//                            if (DEBUG) {
-//                                System.out.println("esquivar en caso 2");
-//                            }
-//                            espera = 3;
-//                        }
-//                    } else {
-//                        mira(estat.mina[1]);
-//                        if (DEBUG) {
-//                            System.out.println("estoy mirando la mina 1 bich");
-//                        }
-//                        if (estat.mina[1].agafaDistancia() <= 40) {
-//                            esquivar();
-//                            if (DEBUG) {
-//                                System.out.println("esquivar en caso 3");
-//                            }
-//                            espera = 3;
-//                        }
-//                    }
-//                }
-//            }
-            if (estat.hyperespaiDisponibles > 0) {
-                if (estat.impactesRebuts > 0) {
-                    hyperespai();
-                    if (DEBUG) {
-                        System.out.println("HYPERESPAI");
-                    }
-                }
-            }
-
-            if (estat.enCollisio) { // situació de nau bloquejada
-                // si veu la nau, dispara
-                if (estat.objecteVisor[CENTRAL] == NAU) {
-                    dispara();
+                if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= 20) {
                     enrere();
-                } else { // hi ha un obstacle, gira i parteix
-                    //esquivar();
-                    if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= 20) {
-                        gira(180);
-                    } else if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= 20) {
-                        dreta();
-                    } else if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= 20) {
-                        esquerra();
-                    }
-                    if (DEBUG) {
-                        System.out.println("esquivar en colision");
-                    }
-                    if (hiHaParedDavant(20)) {
-                        enrere();
-                    } else {
-                        endavant();
-                    }
-
-                    espera = 3;
-                }
-            } else {
-                endavant();
-
-                if (estat.objecteVisor[CENTRAL] == NAU) {
-                    enemic = true;
-                    //modoHuida();
+                    gira(180);
+                    System.out.println("smoke 180 bich");
+                } else if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= 20) {
                     dreta();
-                    espera = 2;
-                } else if (estat.objecteVisor[ESQUERRA] == NAU) {
-                    if (!estat.enCollisio) {
-                        dreta();
-                        espera = 2;
-                    }
-                    if (DEBUG) {
-                        System.out.println("i'm seeing a nigga in my ESQUERRA");
-                    }
-                } else if (estat.objecteVisor[DRETA] == NAU) {
-                    if (!estat.enCollisio) {
-                        esquerra();
-                        espera = 2;
-                    }
-                    if (DEBUG) {
-                        System.out.println("i'm seeing a nigga in my DRETA");
-                    }
+                    System.out.println("esquivar dreta");
+                } else if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= 20) {
+                    esquerra();
+                    System.out.println("esquivar skere");
                 } else {
-                    enemic = false;
-                    modoRecolector();
+                    endavant();
                 }
 
-                movimiento();
+                if (estat.enCollisio) { //Estoy en colision
+                    // si veu la nau, dispara
+                    if (estat.objecteVisor[CENTRAL] == NAU) {
+                        dispara();
+                        enrere(); //For clapping cheeks
+                        System.out.println("I'm clapping this nigga cheeks");
+                    }
+                    if (DEBUG) {
+                        System.out.println("Estoy en colision FUCK");
+                    }
+                } else { //Si no estoy en colision
+                    endavant();
+                    if (estat.objecteVisor[CENTRAL] == NAU) {
+                        enemic = true;
+                        //modoHuida();
+                        dreta();
+                        //espera = 2;
+                    } else if (estat.objecteVisor[ESQUERRA] == NAU) {
+                        if (!estat.enCollisio) {
+                            dreta();
+//                            espera = 2;
+                        }
+                        if (DEBUG) {
+                            System.out.println("i'm seeing a nigga in my ESQUERRA");
+                        }
+                    } else if (estat.objecteVisor[DRETA] == NAU) {
+                        if (!estat.enCollisio) {
+                            esquerra();
+//                            espera = 2;
+                        }
+                        if (DEBUG) {
+                            System.out.println("i'm seeing a nigga in my DRETA");
+                        }
+                    } else {
+                        enemic = false;
+                        modoRecolector();
+                    }
+
+                    movimiento();
+
+                }
 
             }
-
-        }
+        
     }
 
     boolean hiHaParedDavant(int dist) {
@@ -320,4 +287,5 @@ public class Bitxo1 extends Agent {
         }
         return minim;
     }
+
 }
