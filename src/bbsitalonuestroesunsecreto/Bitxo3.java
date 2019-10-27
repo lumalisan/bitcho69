@@ -1,470 +1,265 @@
+//
+// Decompiled by Procyon v0.5.36
+//
 package agents;
 
-// Exemple de Bitxo
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.Timer;
+import java.util.Random;
 
 public class Bitxo3 extends Agent {
 
     static final boolean DEBUG = false;
-
     static final int PARET = 0;
     static final int NAU = 1;
     static final int RES = -1;
-
     static final int ESQUERRA = 0;
     static final int CENTRAL = 1;
     static final int DRETA = 2;
-
-    static final int STD = 5;       // Std. velocitat
-    static final int STDD = 150;    // Std. distancia visors
-    static final int MAXA = 9;      // Max. velocitat angular
-    static final int MAXL = 6;      // Max. velocitat lineal
-    static final int MAXD = 400;    // Max. distancia visors
-    static final int MAXV = 5;
-
     Estat estat;
-
-    // Esperes
-    int espera = 0;
-    int esperaMenjar = 0;
-
-    // Condicions
-    boolean bloquejat = false;
-    boolean veiaEnemic = false;
-    boolean escut = false;
-    int impactesAnteriors = 0;
-    int psensor = 0;
-    boolean enCombat = false;
-    int situacio5 = 0;
-    int pnbonificacions = 10;
-
-    // Cerca recursos
-    Point direccio = new Point(0, 0),
-            pdireccio = new Point(0, 0),
-            pposicio = new Point(0, 0);
-    int objectiu = 0;
-
-    // Comptadors
-    int contra7 = 0;
-    int colisionat = 6;
-
+    int auxdistmina;
+    int espera;
+    int esperamina;
+    int contador;
+    int mindist;
+    int mindistm;
+    int r;
+    int m;
+    int recursonumero;
+    int minanumero;
+    int distanciadisparo;
+    int sectorEX;
+    int casos;
     long temps;
-    Timer t;
 
-    public Bitxo3(Agents pare) {
-        super(pare, "Esbitchança", "imatges/moyake25.gif");
-        t = new Timer(3500, new ActionListener() {
-
-            public void actionPerformed(ActionEvent ae) {
-                if (direccio.x == pdireccio.x && direccio.y == pdireccio.y) {
-                    double dist = pposicio.distance(estat.posicio.x, estat.posicio.y);
-                    if (dist < 50) {
-                        objectiu = (objectiu + 1) % estat.nbonificacions;
-                        cercaMenjar();
-                    }
-                }
-                if (!bloquejat) {
-                    cercaMenjar();
-                }
-                pdireccio.x = direccio.x;
-                pdireccio.y = direccio.y;
-                pposicio.x = estat.posicio.x;
-                pposicio.y = estat.posicio.y;
-            }
-        });
-        t.setInitialDelay(0);
-    }
-
-    @Override
-    public void inicia() {
-        // Inicialitzacions estàndar
-        posaAngleVisors(30);
-        posaDistanciaVisors(STDD);
-        posaVelocitatLineal(STD);
-        posaVelocitatAngular(STD);
+    public Bitxo3(final Agents pare) {
+        super(pare, "Espitchança", "imatges/sosig.gif");
+        auxdistmina = 30;
         espera = 0;
-        temps = 0;
-
-        // Inicialitzacions variables de control
-        esperaMenjar = 0;
-        veiaEnemic = false;
-        direccio = new Point(0, 0);
-        objectiu = 0;
-        contra7 = 3;
-        colisionat = 6;
-        enCombat = false;
-        situacio5 = 0;
+        esperamina = 0;
+        contador = 100;
+        mindist = 1000;
+        mindistm = 1000;
+        distanciadisparo = 40;
     }
 
-    @Override
+    public void inicia() {
+        posaAngleVisors(45);
+        posaDistanciaVisors(400);
+        posaVelocitatLineal(6);
+        posaVelocitatAngular(6);
+        espera = 0;
+        temps = 0L;
+        contador = 40;
+    }
+
     public void avaluaComportament() {
-        boolean enemic;
-        enemic = false;
-
-        temps++;
+        ++temps;
         estat = estatCombat();
-
-        // Direcció inicial del bitxo
-        if (noTencRecursAssignat()) {
-            cercaMenjar();
-        }
-
-        if (hePerdutVida()) {
-            escut = false;
-        }
-
-        if (!enCombat && hePerdutVida()) {
-            hyperespai();
-        }
-
         if (espera > 0) {
-            espera--;
-        } else {
-            if (!enCombat) {
-                atura();
-            }
-
-            int sensor = usaSensors(45);
-
-            if (estat.enCollisio) { // situació de nau bloquejada
-                if (sensor == 5) {
-                    if (enCombat) {
-                        dispara();
-                    }
-                    enrere();
-                    situacio5 = 2;
-                    espera = 1;
-                } else if (enCombat) {
-                    dispara();
-                    atura();
+            enrere();
+            if (espera < 3) {
+                if (estatCombat().distanciaVisors[2] >= estatCombat().distanciaVisors[0]) {
+                    dreta();
                 } else {
-                    // si veu la nau, dispara
-                    if (estat.objecteVisor[CENTRAL] == NAU && estat.impactesRival[0] < 5) {
-                        dispara();   //bloqueig per nau, no giris dispara
-                    } else // hi ha un obstacle, gira i parteix
-                    {
-                        // Control de colisions contínues
-                        colisionat--;
-                        if (colisionat == 3) {
-                            // Mira en l'eix vertical cap on estigui el recurs assignat
-                            int aux = 0;
-                            aux = (direccio.y <= estat.posicio.y) ? (-50) : (50);
-                            mira(estat.recurs[0]);
-                            endavant();
-                        } else if (colisionat == 0) {
-                            // Mira en l'eix horitzontal cap on estigui el recurs assignat
-                            int aux = 0;
-                            aux = (direccio.x <= estat.posicio.x) ? (-50) : (50);
-                            mira(estat.recurs[0]);
-                            endavant();
-                        } else {
-                            // Sortida de colisions
-                            if (hiHaParedDavant(20)) {
-                                enrere();
-                            } else {
-                                posaVelocitatAngular(MAXA);
-                                if (estat.distanciaVisors[DRETA] < estat.distanciaVisors[ESQUERRA]) {
-                                    esquerra();
-                                } else {
-                                    dreta();
-                                }
-                            }
-                        }
-
-                        espera = 3;
-                    }
+                    esquerra();
                 }
-
+            }
+            --espera;
+        } else {
+            atura();
+            if (estatCombat().enCollisio) {
+                espera = 7;
             } else {
-                if (situacio5 > 0 && !enCombat) {
-                    situacio5();
+                //System.out.println(estat.fuel);
+                if (estat.fuel < 15000L) {
+                    posaVelocitatLineal(3);
                 } else {
-                    sortidaControlColisionsContinues();
-
-                    if (!enCombat) {
-                        endavant();
-                    }
-
-                    if (estat.veigEnemic[0]) {
-                        veiaEnemic = true;
-                        this.posaDistanciaVisors(MAXD);
-                        this.posaVelocitatAngular(MAXA);
-
-                        if (estat.sector[0] == 2 || estat.sector[0] == 3) {
-                            mira(estat.enemic[0]);
-                            this.posaVelocitatLineal(MAXL);
-                        } else if (estat.sector[0] == 1) {
-                            dreta();
-                        } else {
-                            esquerra();
-                        }
-
-                    } else {
-                        if (veiaEnemic) {
-                            enCombat = false;
-                            veiaEnemic = false;
-                            // Recalcula posició dels recursos més propers
-                            objectiu = 0;
-                            cercaMenjar();
-                            this.posaVelocitatAngular(STD);
-                            this.posaVelocitatLineal(STD);
-                            this.posaDistanciaVisors(STDD);
-                        }
-                    }
-
-                    if (estat.objecteVisor[CENTRAL] == NAU) {
-                        enemic = true;
-                        enCombat = true;
-                    }
-
-                    if (enemic && !estat.disparant && estat.impactesRival[0] < 5) {
-                        enrere();
-                        dispara();
-                    }
-
-                    if (estat.impactesRebuts == 4 && !escut && estat.balaEnemigaDetectada) {
+                    posaVelocitatLineal(6);
+                }
+                if (estatCombat().objecteVisor[1] == 1 && estatCombat().distanciaVisors[1] < 30.0) {
+                    enrere();
+                } else {
+                    endavant();
+                }
+                if (mindistm > 45) {
+                    if (estatCombat().balaEnemigaDetectada && estatCombat().distanciaBalaEnemiga < 40 && estatCombat().objecteVisor[1] == 1 && estatCombat().hyperespaiDisponibles > 0) {
                         dispara();
                         hyperespai();
                     }
-
-                    // Si no veim l'enemic anam a cercar menjar
-                    if (!estat.veigEnemic[0] && !bloquejat && !estat.enCollisio) {
-                        if (heTrobatRecurs()) {
-                            escut = true;
-                            objectiu = 0;
-                            cercaMenjar();
-                        }
-
-                        // L'enemic ha consumit un recurs que potser era al qual anava
-                        if (!heTrobatRecurs() && haDesaparescutRecurs()) {
-                            objectiu = 0;
-                            cercaMenjar();
-                        }
-
-                        if (esperaMenjar > 0) {
-                            esperaMenjar--;
-                        } else {
-                            mira(estat.enemic[0]);
-                            esperaMenjar = 4;
+                    if (estatCombat().bales > 25) {
+                        distanciadisparo = 400;
+                    }
+                    if (estatCombat().objecteVisor[1] == 1 && !estatCombat().disparant && estatCombat().distanciaVisors[1] < distanciadisparo && estatCombat().bales > 0) {
+                        dispara();
+                    }
+                    if (estatCombat().numEnemics > 0) {
+                        if (estatCombat().numEnemics == 1) {
+                            if (estatCombat().enemic[0].agafaSector() == 4) {
+                                gira(45);
+                                mira(estatCombat().enemic[0]);
+                            } else if (estatCombat().enemic[0].agafaSector() == 1) {
+                                gira(-45);
+                                mira(estatCombat().enemic[0]);
+                            }
+                        } else if (estatCombat().numEnemics == 2 && estatCombat().enemic[0].agafaDistancia() < estatCombat().enemic[1].agafaDistancia()) {
+                            if (estatCombat().numEnemics == 1) {
+                                if (estatCombat().enemic[0].agafaSector() == 4) {
+                                    gira(45);
+                                } else if (estatCombat().enemic[0].agafaSector() == 1) {
+                                    gira(-45);
+                                }
+                                mira(estatCombat().enemic[0]);
+                            } else if (estatCombat().numEnemics == 1) {
+                                if (estatCombat().enemic[1].agafaSector() == 4) {
+                                    gira((int) estatCombat().angleVisors);
+                                } else if (estatCombat().enemic[1].agafaSector() == 1) {
+                                    gira(-(int) estatCombat().angleVisors);
+                                }
+                                mira(estatCombat().enemic[1]);
+                            }
                         }
                     }
-
-                    // Miram els visors per detectar els obstacles
-                    if (!enCombat) {
-                        switch (sensor) {
-                            // 0 0 0
-                            case 0:
-                                bloquejat = false;
-                                if (psensor == 4) {
-                                    esquerra();
-                                } else if (psensor == 1) {
-                                    dreta();
-                                }
-                                endavant();
-                                break;
-                            // 0 0 1
-                            case 1:
-                                esperaMenjar += 1;
-                                esquerra();
-                                break;
-                            // 0 1 1
-                            case 3:  // dreta bloquejada
-                                bloquejat = true;
-                                esquerra();
-                                break;
-                            // 1 0 0
-                            case 4:
-                                esperaMenjar += 1;
-                                dreta();
-                                break;
-                            // 1 1 0
-                            case 6:  // esquerra bloquejada
-                                bloquejat = true;
-                                dreta();
-                                break;
-                            // 1 0 1
-                            case 5:
-                                endavant();
-                                break;  // centre lliure
-                            // 0 1 0
-                            case 2:  // paret devant
-                            // 1 1 1
-                            case 7:  // si estic molt aprop, torna enrere
-                                bloquejat = true;
-                                double distancia;
-                                distancia = minimaDistanciaVisors();
-
-                                if (visorsLateralsMesCurts()) {
-                                    objectiu = (objectiu + 1) % estat.nbonificacions;
-                                    cercaMenjar();
-                                } else if (visorsLateralsLliures()) {
-                                    esquerra();
-                                } else {
-                                    int aux = 0;
-                                    if (estat.angle <= 45 && estat.angle >= 315
-                                            || estat.angle >= 135 && estat.angle <= 225) {
-                                        if (Math.random() * 500 < 250) {
-                                            aux = 100;
-                                        } else {
-                                            aux = -100;
-                                        }
-                                        direccio.x += aux;
-                                    } else if (estat.angle >= 45 && estat.angle <= 135
-                                            || estat.angle >= 225 && estat.angle <= 315) {
-                                        if (Math.random() * 500 < 250) {
-                                            aux = 100;
-                                        } else {
-                                            aux = -100;
-                                        }
-                                        direccio.y += aux;
-                                    }
-                                }
-
-                                if (distancia < 15) {
-                                    espera = 8;
-                                    enrere();
-                                } else // gira aleatòriament a la dreta o a l'esquerra
-                                if (distancia < 50) {
-                                    if (Math.random() * 500 < 250) {
-                                        dreta();
-                                    } else {
-                                        esquerra();
-                                    }
-                                }
-                                if (estat.nbonificacions == 1) {
-                                    esperaMenjar = 20;
-                                }
-                                break;
+                    if (estatCombat().objecteVisor[2] == 1) {
+                        gira(-(int) estatCombat().angleVisors);
+                    }
+                    if (estatCombat().objecteVisor[0] == 1) {
+                        gira((int) estatCombat().angleVisors);
+                    }
+                    if (estatCombat().objecteVisor[1] == 0 && estatCombat().distanciaVisors[1] < 30.0
+                            && estatCombat().objecteVisor[2] == 0 && estatCombat().distanciaVisors[2] < 30.0
+                            && estatCombat().objecteVisor[0] == 0 && estatCombat().distanciaVisors[0] < 30.0) {
+                        final Random r = new Random();
+                        final int aleatorio = r.nextInt(3);
+                        if (aleatorio == 0) {
+                            gira(180);
+                        } else if (aleatorio == 1) {
+                            gira(135);
+                        } else {
+                            gira(225);
                         }
+                    }
+                    if (estatCombat().objecteVisor[0] == 0 && estatCombat().distanciaVisors[0] < 130.0
+                            && estatCombat().distanciaVisors[0] < estatCombat().distanciaVisors[2]) {
+                        dreta();
+                    } else if (estatCombat().objecteVisor[2] == 0 && estatCombat().distanciaVisors[2] < 130.0
+                            && estatCombat().distanciaVisors[2] <= estatCombat().distanciaVisors[0]) {
+                        esquerra();
+                    } else if (estatCombat().objecteVisor[1] == 0 && estatCombat().distanciaVisors[1] < 80.0) {
+                        if (estatCombat().distanciaVisors[2] <= estatCombat().distanciaVisors[0]) {
+                            gira(-45);
+                        } else {
+                            gira(45);
+                        }
+                    }
+                    if ((estat.distanciaVisors[1] >= 25.0 || estat.objecteVisor[1] != 0)
+                            && (estat.distanciaVisors[2] >= 25.0 || estat.objecteVisor[2] != 0)
+                            && (estat.distanciaVisors[0] >= 25.0 || estat.objecteVisor[0] != 0)
+                            && (estatCombat().objecteVisor[0] != 0 || estatCombat().distanciaVisors[0] >= 35.0)
+                            && (estatCombat().objecteVisor[2] != 0 || estatCombat().distanciaVisors[2] >= 35.0)
+                            && estatCombat().numRecursos > 0) {
+                        r = estatCombat().numRecursos - 1;
+                        mindist = estatCombat().recurs[r].agafaDistancia();
+                        recursonumero = r;
+                        --r;
+                        while (r != -1) {
+                            if (estatCombat().recurs[r].agafaDistancia() > 5 && mindist > estatCombat().recurs[r].agafaDistancia()) {
+                                mindist = estatCombat().recurs[r].agafaDistancia();
+                                recursonumero = r;
+                                sectorEX = estatCombat().recurs[r].agafaSector();
+                            }
+                            --r;
+                        }
+                        if (sectorEX == 4) {
+                            gira((int) estatCombat().angleVisors);
+                        } else if (sectorEX == 1) {
+                            gira(-(int) estatCombat().angleVisors);
+                        }
+                        mira(estatCombat().recurs[recursonumero]);
+                    }
+                    if (estatCombat().bales == 0 && estatCombat().objecteVisor[1] == 1) {
+                        gira(180);
                     }
                 }
+                if (estatCombat().numMines > 0) {
+                    m = estatCombat().numMines - 1;
+                    mindistm = estatCombat().mina[m].agafaDistancia();
+                    minanumero = m;
+                    --m;
+                    while (m != -1) {
+                        if (mindistm > estatCombat().mina[m].agafaDistancia()) {
+                            mindistm = estatCombat().mina[m].agafaDistancia();
+                            minanumero = m;
+                        }
+                        --m;
+                    }
+                    if (estatCombat().mina[minanumero].agafaSector() == 2 && estatCombat().mina[minanumero].agafaDistancia() < 50 && estatCombat().distanciaVisors[2] < 60.0 && estatCombat().objecteVisor[2] == 0 && estatCombat().distanciaVisors[0] > estatCombat().distanciaVisors[2]) {
+                        gira(30);
+                    } else if (estatCombat().mina[minanumero].agafaSector() == 2 && estatCombat().mina[minanumero].agafaDistancia() < 50 && estatCombat().distanciaVisors[0] < 60.0 && estatCombat().objecteVisor[0] == 0 && estatCombat().distanciaVisors[0] < estatCombat().distanciaVisors[2]) {
+                        gira(-45);
+                    } else if (estatCombat().mina[minanumero].agafaSector() == 3 && estatCombat().mina[minanumero].agafaDistancia() < 50 && estatCombat().distanciaVisors[0] < 60.0 && estatCombat().objecteVisor[0] == 0 && estatCombat().distanciaVisors[0] < estatCombat().distanciaVisors[2]) {
+                        gira(-30);
+                    } else if (estatCombat().mina[minanumero].agafaSector() == 3 && estatCombat().mina[minanumero].agafaDistancia() < 50 && estatCombat().distanciaVisors[2] < 60.0 && estatCombat().objecteVisor[2] == 0 && estatCombat().distanciaVisors[0] > estatCombat().distanciaVisors[2]) {
+                        gira(45);
+                    } else if (estatCombat().mina[minanumero].agafaSector() == 2 && estatCombat().mina[minanumero].agafaDistancia() < 50) {
+                        gira(30);
+                    } else if (estatCombat().mina[minanumero].agafaSector() == 3 && estatCombat().mina[minanumero].agafaDistancia() < 50) {
+                        gira(-30);
+                    }
+                    if (estatCombat().bales >= 30) {
+                        auxdistmina = 80;
+                    } else {
+                        auxdistmina = 30;
+                    }
+                    if (estatCombat().mina[minanumero].agafaDistancia() < auxdistmina && estatCombat().bales > 0 && !estatCombat().disparant) {
+                        while (!disparant()) {
+                            atura();
+                            switch (estatCombat().mina[minanumero].agafaSector()) {
+                                case 4: {
+                                    gira((int) estatCombat().angleVisors);
+                                    mira(estatCombat().mina[minanumero]);
+                                    dispara();
+                                    continue;
+                                }
+                                case 1: {
+                                    gira(-(int) estatCombat().angleVisors);
+                                    mira(estatCombat().mina[minanumero]);
+                                    dispara();
+                                    continue;
+                                }
+                                default: {
+                                    mira(estatCombat().mina[minanumero]);
+                                    dispara();
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    mindistm = 1000;
+                }
             }
-            psensor = sensor;
         }
-
-        pnbonificacions = estat.nbonificacions;
-        impactesAnteriors = estat.impactesRebuts;
-
     }
 
-    boolean hiHaParedDavant(int dist) {
-
-        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] <= dist) {
-            return true;
-        }
-
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] <= dist) {
-            return true;
-        }
-
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] <= dist) {
-            return true;
-        }
-
-        return false;
+    boolean hiHaParedDavant(final int dist) {
+        return (estatCombat().objecteVisor[0] == 0
+                && estatCombat().distanciaVisors[0] <= dist)
+                || (estatCombat().objecteVisor[1] == 0
+                && estatCombat().distanciaVisors[1] <= dist)
+                || (estatCombat().objecteVisor[2] == 0
+                && estatCombat().distanciaVisors[2] <= dist);
     }
 
     double minimaDistanciaVisors() {
-        double minim;
-
-        minim = Double.POSITIVE_INFINITY;
-        if (estat.objecteVisor[ESQUERRA] == PARET) {
-            minim = estat.distanciaVisors[ESQUERRA];
+        double minim = Double.POSITIVE_INFINITY;
+        if (estatCombat().objecteVisor[0] == 0) {
+            minim = estatCombat().distanciaVisors[0];
         }
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < minim) {
-            minim = estat.distanciaVisors[CENTRAL];
+        if (estatCombat().objecteVisor[1] == 0 && estatCombat().distanciaVisors[1] < minim) {
+            minim = estatCombat().distanciaVisors[1];
         }
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < minim) {
-            minim = estat.distanciaVisors[DRETA];
+        if (estatCombat().objecteVisor[2] == 0 && estatCombat().distanciaVisors[2] < minim) {
+            minim = estatCombat().distanciaVisors[2];
         }
         return minim;
-    }
-
-    void cercaMenjar() {
-        mira(estat.recurs[0]);
-        t.start();
-    }
-
-    boolean noTencRecursAssignat() {
-        return (direccio.x == 0 && direccio.y == 0);
-    }
-
-    boolean hePerdutVida() {
-        return impactesAnteriors < estat.impactesRebuts;
-    }
-
-    void sortidaControlColisionsContinues() {
-        // Recerca menjar si surts d'una colisió
-        if (colisionat <= 3) {
-            objectiu = 0;
-            cercaMenjar();
-        }
-        // Reinici del comptador de colisions contínues
-        colisionat = 6;
-    }
-
-    boolean heTrobatRecurs() {
-        return (estat.posicio.x >= direccio.x - 10
-                && estat.posicio.x <= direccio.x + 10
-                && estat.posicio.y >= direccio.y - 10
-                && estat.posicio.y <= direccio.y + 10);
-    }
-
-    int usaSensors(int dist) {
-        int sensor = 0;
-
-        if (estat.objecteVisor[DRETA] == PARET && estat.distanciaVisors[DRETA] < dist) {
-            sensor += 1;
-        }
-        if (estat.objecteVisor[CENTRAL] == PARET && estat.distanciaVisors[CENTRAL] < dist) {
-            sensor += 2;
-        }
-        if (estat.objecteVisor[ESQUERRA] == PARET && estat.distanciaVisors[ESQUERRA] < dist) {
-            sensor += 4;
-        }
-
-        return sensor;
-    }
-
-    boolean visorsLateralsMesCurts() {
-        return (estat.distanciaVisors[DRETA] < estat.distanciaVisors[CENTRAL]
-                && estat.distanciaVisors[ESQUERRA] < estat.distanciaVisors[CENTRAL]);
-    }
-
-    boolean dreta = false;
-
-    void situacio5() {
-        if (situacio5 == 2) {
-            if (estat.distanciaVisors[DRETA] < estat.distanciaVisors[ESQUERRA]) {
-                gira(10);
-                dreta = false;
-            } else {
-                gira(-10);
-                dreta = true;
-            }
-            endavant();
-            situacio5 = 1;
-            espera = 1;
-        } else if (situacio5 == 1) {
-            if (dreta) {
-                gira(10);
-            } else {
-                gira(-10);
-            }
-            endavant();
-            situacio5 = 0;
-        }
-    }
-
-    boolean haDesaparescutRecurs() {
-        return pnbonificacions > estat.nbonificacions;
-    }
-
-    boolean visorsLateralsLliures() {
-        return (estat.distanciaVisors[DRETA] > 90
-                && estat.distanciaVisors[ESQUERRA] > 90);
     }
 }
