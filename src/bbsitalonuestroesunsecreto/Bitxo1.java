@@ -258,12 +258,16 @@ public class Bitxo1 extends Agent {
                         && estatCombat().objecteVisor[0] == 0 && estatCombat().distanciaVisors[0] < 30.0) {
                     final Random r = new Random();
                     final int aleatorio = r.nextInt(3);
-                    if (aleatorio == 0) {
-                        gira(180);
-                    } else if (aleatorio == 1) {
-                        gira(135);
-                    } else {
-                        gira(225);
+                    switch (aleatorio) {
+                        case 0:
+                            gira(180);
+                            break;
+                        case 1:
+                            gira(135);
+                            break;
+                        default:
+                            gira(225);
+                            break;
                     }
                 }
                 if (estatCombat().objecteVisor[0] == 0 && estatCombat().distanciaVisors[0] < 130.0
